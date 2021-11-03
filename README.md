@@ -11,3 +11,6 @@
 
 ### Provided TF Transforms
 - odom.header.frame_id (e.g. "odom")->`~child_frame_id` (e.g. "BODY")
+
+### Reguired TF Transforms
+- `~child_frame_id` (e.g. "BODY")->odom.header.child_frame_id (e.g. "camera_optical_frame")
