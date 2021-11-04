@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>odom_tf_publisher</name>
+  <name>tftree_merger</name>
   <version>0.0.0</version>
-  <description>The odom_tf_publisher package</description>
+  <description>The tftree_merger package</description>
 
   <maintainer email="hiraoka@jsk.imi.i.u-tokyo.ac.jp">Naoki-Hiraoka</maintainer>
 
@@ -10,7 +10,6 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <depend>nav_msgs</depend>
   <depend>tf</depend>
   <depend>tf_conversions</depend>
   <depend>eigen_conversions</depend>
