@@ -6,6 +6,7 @@
 - joint_states (`sensor_msgs/JointState`)
 
 ### Param
+- `~model` (String) : choreonoid file name
 - `~frame_id` (String)
 - `~base_frame_id` (String)
 - `~com_frame_id` (String)
