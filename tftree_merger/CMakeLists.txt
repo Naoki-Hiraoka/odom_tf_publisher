@@ -11,6 +11,13 @@ find_package(catkin REQUIRED COMPONENTS
   eigen_conversions
   )
 
+catkin_package(
+  #  INCLUDE_DIRS include
+  #  LIBRARIES odom_tf_publisher
+  #  CATKIN_DEPENDS other_catkin_pkg
+  #  DEPENDS system_lib
+)
+
 ###########
 ## Build ##
 ###########
