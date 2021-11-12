@@ -16,6 +16,10 @@ namespace odom_tf_publisher {
 
       pnh.param("child_frame_id", child_frame_id_,
                 std::string(""));
+      pnh.param("frame_id_overwrite", frame_id_overwrite_,
+                std::string(""));
+      pnh.param("child_frame_id_overwrite", child_frame_id_overwrite_,
+                std::string(""));
 
       odomSub_ = nh.subscribe("odom", 1, &odom_tf_publisher::odomCallback, this); // keep only latest ones to avoid latency because waitForTransform in callback function takes much time.
 
@@ -25,11 +29,13 @@ namespace odom_tf_publisher {
       // odom
       Eigen::Affine3d odom_pose;
       tf::poseMsgToEigen(msg->pose.pose, odom_pose);
+      std::string odom_frame_id = (this->frame_id_overwrite_ == "") ? msg->header.frame_id : this->frame_id_overwrite_;
+      std::string odom_child_frame_id = (this->child_frame_id_overwrite_ == "") ? msg->child_frame_id : this->child_frame_id_overwrite_;
 
-      if(this->child_frame_id_ != "" && this->child_frame_id_ != msg->child_frame_id){
+      if(this->child_frame_id_ != "" && this->child_frame_id_ != odom_child_frame_id){
         // convert frame
 
-        if (!this->tfListener_->waitForTransform(this->child_frame_id_, msg->child_frame_id, msg->header.stamp, ros::Duration(1.0))) {
+        if (!this->tfListener_->waitForTransform(this->child_frame_id_, odom_child_frame_id, msg->header.stamp, ros::Duration(1.0))) {
           ROS_ERROR("failed to lookup transform between %s and %s",
                     this->child_frame_id_.c_str(),
                     msg->child_frame_id.c_str());
@@ -37,7 +43,7 @@ namespace odom_tf_publisher {
         }
 
         tf::StampedTransform transform;
-        tfListener_->lookupTransform(this->child_frame_id_, msg->child_frame_id, msg->header.stamp, transform);
+        tfListener_->lookupTransform(this->child_frame_id_, odom_child_frame_id, msg->header.stamp, transform);
         Eigen::Affine3d transform_pose;
         tf::transformTFToEigen(transform,transform_pose);
 
@@ -46,8 +52,9 @@ namespace odom_tf_publisher {
 
       geometry_msgs::TransformStamped odom_coords;
       odom_coords.header = msg->header;
+      odom_coords.header.frame_id = odom_frame_id;
       if(this->child_frame_id_!="") odom_coords.child_frame_id = this->child_frame_id_;
-      else odom_coords.child_frame_id = msg->child_frame_id;
+      else odom_coords.child_frame_id = odom_child_frame_id;
       tf::transformEigenToMsg(odom_pose, odom_coords.transform);
       std::vector<geometry_msgs::TransformStamped> tf_transforms;
       tf_transforms.push_back(odom_coords);
@@ -60,6 +67,8 @@ namespace odom_tf_publisher {
     ros::Subscriber odomSub_;
 
     std::string child_frame_id_;
+    std::string frame_id_overwrite_;
+    std::string child_frame_id_overwrite_;
   private:
   };
 }
