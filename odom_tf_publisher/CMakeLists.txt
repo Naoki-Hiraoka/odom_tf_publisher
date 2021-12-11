@@ -6,8 +6,7 @@ add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
   nav_msgs
-  tf
-  tf_conversions
+  tf2_ros
   eigen_conversions
   )
 find_package(PkgConfig REQUIRED)

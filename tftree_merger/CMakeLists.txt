@@ -6,8 +6,7 @@ set(CMAKE_BUILD_TYPE Release)
 add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
-  tf
-  tf_conversions
+  tf2_ros
   eigen_conversions
   )
 

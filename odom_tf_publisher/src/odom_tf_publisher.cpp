@@ -1,8 +1,8 @@
-#include <tf/transform_listener.h>
-#include <tf/transform_broadcaster.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/transform_broadcaster.h>
 #include <nav_msgs/Odometry.h>
 #include <Eigen/Geometry>
-#include <tf_conversions/tf_eigen.h>
 #include <eigen_conversions/eigen_msg.h>
 
 
@@ -10,9 +10,10 @@ namespace odom_tf_publisher {
   class odom_tf_publisher
   {
   public:
-    odom_tf_publisher() {
+    odom_tf_publisher()
+      : tfListener_(tfBuffer_)
+    {
       ros::NodeHandle nh, pnh("~");
-      tfListener_.reset(new tf::TransformListener());
 
       pnh.param("child_frame_id", child_frame_id_,
                 std::string(""));
@@ -35,17 +36,14 @@ namespace odom_tf_publisher {
       if(this->child_frame_id_ != "" && this->child_frame_id_ != odom_child_frame_id){
         // convert frame
 
-        if (!this->tfListener_->waitForTransform(this->child_frame_id_, odom_child_frame_id, msg->header.stamp, ros::Duration(1.0))) {
-          ROS_ERROR("failed to lookup transform between %s and %s",
-                    this->child_frame_id_.c_str(),
-                    msg->child_frame_id.c_str());
+        Eigen::Affine3d transform_pose;
+        try{
+          geometry_msgs::TransformStamped transform = transform = tfBuffer_.lookupTransform(this->child_frame_id_, odom_child_frame_id, msg->header.stamp, ros::Duration(1.0));
+          tf::transformMsgToEigen(transform.transform,transform_pose);
+        }catch (std::exception& ex) {
+          ROS_ERROR_STREAM(ex.what());
           return;
         }
-
-        tf::StampedTransform transform;
-        tfListener_->lookupTransform(this->child_frame_id_, odom_child_frame_id, msg->header.stamp, transform);
-        Eigen::Affine3d transform_pose;
-        tf::transformTFToEigen(transform,transform_pose);
 
         odom_pose = odom_pose * transform_pose.inverse();
       }
@@ -62,8 +60,9 @@ namespace odom_tf_publisher {
     }
 
   protected:
-    boost::shared_ptr<tf::TransformListener> tfListener_;
-    tf::TransformBroadcaster tfBroadcaster_;
+    tf2_ros::Buffer tfBuffer_;
+    tf2_ros::TransformListener tfListener_;
+    tf2_ros::TransformBroadcaster tfBroadcaster_;
     ros::Subscriber odomSub_;
 
     std::string child_frame_id_;

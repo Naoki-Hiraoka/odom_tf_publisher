@@ -1,8 +1,8 @@
-#include <tf/transform_listener.h>
-#include <tf/transform_broadcaster.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/transform_broadcaster.h>
 #include <nav_msgs/Odometry.h>
 #include <Eigen/Geometry>
-#include <tf_conversions/tf_eigen.h>
 #include <eigen_conversions/eigen_msg.h>
 
 
@@ -10,9 +10,10 @@ namespace tftree_merger {
   class tftree_merger
   {
   public:
-    tftree_merger() {
+    tftree_merger()
+      : tfListener_(tfBuffer_)
+    {
       ros::NodeHandle nh, pnh("~");
-      tfListener_.reset(new tf::TransformListener());
 
       pnh.param("parenttree_rootframe", parenttree_rootframe_,std::string(""));
       pnh.param("parenttree_targetframe", parenttree_targetframe_,std::string(""));
@@ -25,32 +26,48 @@ namespace tftree_merger {
     }
 
     void periodicTimerCallback(const ros::TimerEvent& event){
-      ros::Time now = ros::Time::now();
-      if (!this->tfListener_->waitForTransform(this->parenttree_rootframe_, this->parenttree_targetframe_, now, ros::Duration(1.0))) {
-        ROS_ERROR_STREAM("failed to lookup transform between " << this->parenttree_rootframe_ << " and " << this->parenttree_targetframe_);
+      geometry_msgs::TransformStamped parentTransform;
+      try{
+        parentTransform = this->tfBuffer_.lookupTransform(this->parenttree_rootframe_, this->parenttree_targetframe_, ros::Time(0), ros::Duration(3));
+      } catch (std::exception& ex) {
+        ROS_ERROR_STREAM(ex.what());
         return;
       }
+
+      geometry_msgs::TransformStamped childTransform;
+      try{
+        childTransform = this->tfBuffer_.lookupTransform(this->childtree_rootframe_, this->childtree_targetframe_, ros::Time(0), ros::Duration(3));
+      } catch (std::exception& ex) {
+        ROS_ERROR_STREAM(ex.what());
+        return;
+      }
+
+      // stampをそろえる
+      if(parentTransform.header.stamp > childTransform.header.stamp){
+        try{
+          parentTransform = this->tfBuffer_.lookupTransform(this->parenttree_rootframe_, this->parenttree_targetframe_, childTransform.header.stamp);
+        } catch (std::exception& ex) {
+          ROS_ERROR_STREAM(ex.what());
+          return;
+        }
+      }else if(parentTransform.header.stamp < childTransform.header.stamp){
+        try{
+          childTransform = this->tfBuffer_.lookupTransform(this->childtree_rootframe_, this->childtree_targetframe_, parentTransform.header.stamp);
+        } catch (std::exception& ex) {
+          ROS_ERROR_STREAM(ex.what());
+          return;
+        }
+      }
+
       Eigen::Affine3d parentT;
-      {
-        tf::StampedTransform transform;
-        tfListener_->lookupTransform(this->parenttree_rootframe_, this->parenttree_targetframe_, now, transform);
-        tf::transformTFToEigen(transform,parentT);
-      }
-      if (!this->tfListener_->waitForTransform(this->childtree_rootframe_, this->childtree_targetframe_, now, ros::Duration(1.0))) {
-        ROS_ERROR_STREAM("failed to lookup transform between " << this->childtree_rootframe_ << " and " << this->childtree_targetframe_);
-        return;
-      }
+      tf::transformMsgToEigen(parentTransform.transform,parentT);
       Eigen::Affine3d childT;
-      {
-        tf::StampedTransform transform;
-        tfListener_->lookupTransform(this->childtree_rootframe_, this->childtree_targetframe_, now, transform);
-        tf::transformTFToEigen(transform,childT);
-      }
+      tf::transformMsgToEigen(childTransform.transform,childT);
 
       Eigen::Affine3d trans = parentT * childT.inverse();
 
       geometry_msgs::TransformStamped tf_coords;
-      tf_coords.header.stamp = now;
+      tf_coords.header.stamp = parentTransform.header.stamp;
       tf_coords.header.frame_id = this->parenttree_rootframe_;
       tf_coords.child_frame_id = this->childtree_rootframe_;
       tf::transformEigenToMsg(trans, tf_coords.transform);
@@ -58,8 +75,9 @@ namespace tftree_merger {
     }
 
   protected:
-    boost::shared_ptr<tf::TransformListener> tfListener_;
-    tf::TransformBroadcaster tfBroadcaster_;
+    tf2_ros::Buffer tfBuffer_;
+    tf2_ros::TransformListener tfListener_;
+    tf2_ros::TransformBroadcaster tfBroadcaster_;
     ros::Timer timer_;
 
     std::string parenttree_rootframe_;
