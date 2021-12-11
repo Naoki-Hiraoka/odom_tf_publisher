@@ -38,7 +38,7 @@ namespace odom_tf_publisher {
 
         Eigen::Affine3d transform_pose;
         try{
-          geometry_msgs::TransformStamped transform = transform = tfBuffer_.lookupTransform(this->child_frame_id_, odom_child_frame_id, msg->header.stamp, ros::Duration(1.0));
+          geometry_msgs::TransformStamped transform = tfBuffer_.lookupTransform(this->child_frame_id_, odom_child_frame_id, msg->header.stamp, ros::Duration(1.0));
           tf::transformMsgToEigen(transform.transform,transform_pose);
         }catch (std::exception& ex) {
           ROS_ERROR_STREAM(ex.what());
