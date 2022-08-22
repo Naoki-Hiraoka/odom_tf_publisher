@@ -1,7 +1,6 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/transform_broadcaster.h>
-#include <nav_msgs/Odometry.h>
 #include <Eigen/Geometry>
 #include <eigen_conversions/eigen_msg.h>
 
