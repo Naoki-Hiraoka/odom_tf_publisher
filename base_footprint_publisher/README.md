@@ -3,15 +3,15 @@
 ## base_footprint_publisher
 
 ### Param
-- `~parenttree_rootframe` (String)
-- `~parenttree_targetframe` (String)
-- `~childtree_rootframe` (String)
-- `~childtree_targetframe` (String)
+- `~rleg_frame` (String) (default: rleg_end_coords)
+- `~lleg_frame` (String) (default: lleg_end_coords)
+- `~world_frame` (String) (default: odom)
+- `~frame_id` (String) (default: base_footprint)
 
 ### Provided TF Transforms
-- `~parenttree_rootframe`->`~childtree_rootframe`
-  `~parenttree_targetframe`と`~childtree_targetframe`を一致させる
+- `~world_frame`->`~frame_id`
+  `~rleg_frame`と`~lleg_frame`の中間. ただし`~world_frame`でZ軸は鉛直で、Z座標は`~rleg_frame`と`~lleg_frame`の低い方
 
 ### Reguired TF Transforms
-- `~parenttree_rootframe`->`~parenttree_targetframe`
-- `~childtree_rootframe`->`~childtree_targetframe`
+- `~world_frame`->`~rleg_frame`
+- `~world_frame`->`~lleg_frame`
