@@ -27,6 +27,18 @@ namespace odom_tf_publisher {
     }
 
     void odomCallback(const nav_msgs::Odometry::ConstPtr& msg) {
+      if(!std::isfinite(msg->pose.pose.position.x) ||
+         !std::isfinite(msg->pose.pose.position.y) ||
+         !std::isfinite(msg->pose.pose.position.z) ||
+         !std::isfinite(msg->pose.pose.orientation.x) ||
+         !std::isfinite(msg->pose.pose.orientation.y) ||
+         !std::isfinite(msg->pose.pose.orientation.z) ||
+         !std::isfinite(msg->pose.pose.orientation.w)
+         ){
+        // ビジュアルオドメトリセンサを使用していると、たまにnanが入ることがあるので.
+        ROS_ERROR("input odom message is not finite. ignore this message");
+        return;
+      }
       // odom
       Eigen::Affine3d odom_pose;
       tf::poseMsgToEigen(msg->pose.pose, odom_pose);
