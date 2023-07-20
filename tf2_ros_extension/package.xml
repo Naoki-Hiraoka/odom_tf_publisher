@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>odom_tf_publisher</name>
+  <name>tf2_ros_extension</name>
   <version>0.0.0</version>
-  <description>The odom_tf_publisher package</description>
+  <description>The tf2_ros_extension package</description>
 
   <maintainer email="hiraoka@jsk.imi.i.u-tokyo.ac.jp">Naoki-Hiraoka</maintainer>
 
@@ -10,9 +10,5 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <depend>nav_msgs</depend>
   <depend>tf2_ros</depend>
-  <depend>eigen_conversions</depend>
-  <depend>tf2_ros_extension</depend>
-
 </package>

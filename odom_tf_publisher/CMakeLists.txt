@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   tf2_ros
   eigen_conversions
+  tf2_ros_extension
   )
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(EIGEN eigen3)
