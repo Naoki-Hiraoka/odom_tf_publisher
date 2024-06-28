@@ -24,6 +24,8 @@ namespace odom_tf_publisher {
                 std::string(""));
       pnh.param("child_frame_id_overwrite", child_frame_id_overwrite_,
                 std::string(""));
+      pnh.param("invert_odom", invert_odom_,
+                false);
       int queue_size_;
       pnh.param("queue_size", queue_size_,
                 10);
@@ -64,7 +66,7 @@ namespace odom_tf_publisher {
         return;
       }
       // odom
-      Eigen::Affine3d odom_pose;
+      Eigen::Isometry3d odom_pose;
       tf::poseMsgToEigen(msg->pose.pose, odom_pose);
       std::string odom_frame_id = (this->frame_id_overwrite_ == "") ? msg->header.frame_id : this->frame_id_overwrite_;
       std::string odom_child_frame_id = (this->child_frame_id_overwrite_ == "") ? msg->child_frame_id : this->child_frame_id_overwrite_;
@@ -72,7 +74,7 @@ namespace odom_tf_publisher {
       if(this->child_frame_id_ != "" && this->child_frame_id_ != odom_child_frame_id){
         // convert frame
 
-        Eigen::Affine3d transform_pose;
+        Eigen::Isometry3d transform_pose;
         try{
           geometry_msgs::TransformStamped transform = tfBuffer_.lookupTransform(this->child_frame_id_, odom_child_frame_id, msg->header.stamp, ros::Duration(0.0));
           tf::transformMsgToEigen(transform.transform,transform_pose);
@@ -89,10 +91,12 @@ namespace odom_tf_publisher {
       odom_coords.header.frame_id = odom_frame_id;
       if(this->child_frame_id_!="") odom_coords.child_frame_id = this->child_frame_id_;
       else odom_coords.child_frame_id = odom_child_frame_id;
+      if(this->invert_odom_){
+        std::swap(odom_coords.header.frame_id, odom_coords.child_frame_id);
+        odom_pose = odom_pose.inverse();
+      }
       tf::transformEigenToMsg(odom_pose, odom_coords.transform);
-      std::vector<geometry_msgs::TransformStamped> tf_transforms;
-      tf_transforms.push_back(odom_coords);
-      this->tfBroadcaster_.sendTransform(tf_transforms);
+      this->tfBroadcaster_.sendTransform(odom_coords);
     }
 
   protected:
@@ -106,6 +110,7 @@ namespace odom_tf_publisher {
     std::string child_frame_id_;
     std::string frame_id_overwrite_;
     std::string child_frame_id_overwrite_;
+    bool invert_odom_;
   private:
   };
 }

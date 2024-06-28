@@ -14,6 +14,7 @@
   if supplied, odom.child_frame_id is overwrited
 - `~queue_size` (Int. default 10)
   queue size
+- `~invert_odom` (Bool. default false)
 
 ### Provided TF Transforms
 - odom.header.frame_id (e.g. "odom")->`~child_frame_id` (e.g. "BODY")
